@@ -504,6 +504,15 @@ export async function registerRoutes(httpServer: Server, app: Express) {
   // ─── Observations ──────────────────────────────────────────────────────────
   app.get("/api/fiches/:ficheId/observations", requireAuth, (req, res) => {
     const ficheId = parseInt(req.params.ficheId);
+    // Sécurité : un joueur ne peut accéder qu'à ses propres observations
+    if (req.authRole === "JOUEUR") {
+      const fiche = storage.getFicheById(ficheId);
+      if (!fiche) return res.status(404).json({ error: "Fiche non trouvée" });
+      const myJoueur = storage.getJoueurByUserId(req.authUserId!);
+      if (!myJoueur || myJoueur.id !== fiche.joueurId) {
+        return res.status(403).json({ error: "Accès refusé" });
+      }
+    }
     return res.json(storage.getObservationsByFicheId(ficheId));
   });
 

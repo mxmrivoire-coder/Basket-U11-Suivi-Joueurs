@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import type { Joueur, FicheSuivi, EvalTech, EvalMentale, Objectif, NoteJoueur } from "@shared/schema";
+import type { Joueur, FicheSuivi, EvalTech, EvalMentale, Objectif, NoteJoueur, Observation } from "@shared/schema";
 
 type FicheCompleteData = {
   fiche: FicheSuivi;
@@ -18,6 +18,7 @@ type FicheCompleteData = {
   evalTech: EvalTech | null;
   evalMentale: EvalMentale | null;
   objectifs: Objectif[];
+  observations: Observation[];
   noteJoueur: NoteJoueur | null;
 };
 
@@ -176,10 +177,11 @@ export default function MaFichePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 h-10">
+        <TabsList className="grid w-full grid-cols-5 h-10">
           <TabsTrigger value="accueil" className="text-xs">🏠 Accueil</TabsTrigger>
           <TabsTrigger value="technique" className="text-xs">🏀 Technique</TabsTrigger>
           <TabsTrigger value="mental" className="text-xs">🧠 Mental</TabsTrigger>
+          <TabsTrigger value="observations" className="text-xs">📋 Coach</TabsTrigger>
           <TabsTrigger value="message" className="text-xs">💬 Message</TabsTrigger>
         </TabsList>
 
@@ -345,6 +347,43 @@ export default function MaFichePage() {
                 </div>
               )}
               {!evalMentale && <p className="text-sm text-center text-muted-foreground py-4">Pas encore évalué</p>}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+
+        {/* ─── Observations du coach (lecture seule) ───────────────────────── */}
+        <TabsContent value="observations" className="space-y-3 mt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                📋 Observations du coach
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(!data.observations || data.observations.length === 0) ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Aucune observation pour le moment.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {data.observations.map((obs) => (
+                    <div key={obs.id} className="border border-border rounded-lg p-3 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {new Date(obs.dateSeance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                        </span>
+                        {obs.type && (
+                          <Badge variant="secondary" className="text-xs capitalize">
+                            {obs.type}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-foreground leading-relaxed">{obs.contenu}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
