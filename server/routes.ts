@@ -65,10 +65,29 @@ function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
 const requireAdmin = requireWriteAccess;
 
 export async function registerRoutes(httpServer: Server, app: Express) {
-  // ─── Bootstrap: créer les données de production si DB vide ─────────────────
+  // ─── Bootstrap: créer les données de production ──────────────────────────────
   // Source: logs Railway 2026-03-31 → 2026-04-08 (CERTAIN)
+  // Se déclenche si :
+  //   1. DB vide (premier démarrage)
+  //   2. DB contient uniquement les données de démo (Lucas Martin, etc.)
+  //   3. Variable d'environnement FORCE_RESEED=true
   const existingUsers = storage.getAllUsers();
-  if (existingUsers.length === 0) {
+  const existingJoueurs = storage.getAllJoueurs();
+  const hasDemoData = existingJoueurs.some((j: any) => j.nom === "Martin" && j.prenom === "Lucas");
+  const forceReseed = process.env.FORCE_RESEED === "true";
+  const needsBootstrap = existingUsers.length === 0 || hasDemoData || forceReseed;
+
+  if (needsBootstrap) {
+    // Nettoyer les données de démo si elles existent
+    if (hasDemoData || forceReseed) {
+      console.log("[bootstrap] Nettoyage des données de démo...");
+      const db = (storage as any).db;
+      if (db) {
+        const tables = ["objectifs_individuels","observations","notes_internes","notes_joueurs","evaluations_techniques","evaluations_mentales","fiches_suivi","joueurs","saisons","users"];
+        for (const t of tables) db.prepare("DELETE FROM " + t).run();
+        console.log("[bootstrap] Données de démo supprimées");
+      }
+    }
 
     // ── Saison ──────────────────────────────────────────────────────────────
     const saison = storage.createSaison({
