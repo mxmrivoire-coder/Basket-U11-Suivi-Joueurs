@@ -273,7 +273,6 @@ class SQLiteStorage implements IStorage {
     .values({ ...rest, dateCreation: dateCreation || this.now() } as any)
     .returning()
     .get();
-}
   }
   getAllUsers(): User[] {
     return db.select().from(users).all();
