@@ -254,8 +254,26 @@ class SQLiteStorage implements IStorage {
     return db.select().from(users).where(eq(users.id, id)).get();
   }
   createUser(data: InsertUser & { dateCreation?: string }): User {
-    const { dateCreation, ...rest } = data;
-    return db.insert(users).values({ ...rest, dateCreation: dateCreation || this.now() } as any).returning().get();
+  // Si un utilisateur avec cet email existe déjà, on le renvoie au lieu de planter
+  const existing = db
+    .select()
+    .from(users)
+    .where(eq(users.email, data.email))
+    .get();
+
+  if (existing) {
+    console.log(`[storage] User ${data.email} existe déjà, retour de l'utilisateur existant`);
+    return existing;
+  }
+
+  const { dateCreation, ...rest } = data;
+
+  return db
+    .insert(users)
+    .values({ ...rest, dateCreation: dateCreation || this.now() } as any)
+    .returning()
+    .get();
+}
   }
   getAllUsers(): User[] {
     return db.select().from(users).all();
