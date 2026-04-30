@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { storage } from "./storage";
+import { storage, sqlite } from "./storage";
 
 const JWT_SECRET = process.env.JWT_SECRET || "basket-u11-jwt-secret-2024";
 const JWT_EXPIRES = "7d";
@@ -81,12 +81,9 @@ export async function registerRoutes(httpServer: Server, app: Express) {
     // Nettoyer les données de démo si elles existent
     if (hasDemoData || forceReseed) {
       console.log("[bootstrap] Nettoyage des données de démo...");
-      const db = (storage as any).db;
-      if (db) {
-        const tables = ["objectifs_individuels","observations","notes_internes","notes_joueurs","evaluations_techniques","evaluations_mentales","fiches_suivi","joueurs","saisons","users"];
-        for (const t of tables) db.prepare("DELETE FROM " + t).run();
-        console.log("[bootstrap] Données de démo supprimées");
-      }
+      const tables = ["objectifs_individuels","observations","notes_internes","notes_joueurs","evaluations_techniques","evaluations_mentales","fiches_suivi","joueurs","saisons","users"];
+      for (const t of tables) sqlite.prepare("DELETE FROM " + t).run();
+      console.log("[bootstrap] Données de démo supprimées");
     }
 
     // ── Saison ──────────────────────────────────────────────────────────────

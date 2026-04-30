@@ -19,6 +19,7 @@ import {
 
 const sqlite = new Database("basket.db");
 export const db = drizzle(sqlite);
+export { sqlite };
 
 // ─── Init schema (idempotent CREATE IF NOT EXISTS) ────────────────────────────
 sqlite.exec(`
